@@ -17,6 +17,12 @@ class ApiClient {
     return this.token || localStorage.getItem('minyflow_token');
   }
 
+  private isAuthPage(): boolean {
+    if (typeof window === 'undefined') return false;
+    const path = window.location.pathname;
+    return path === '/login' || path === '/register';
+  }
+
   private async request<T>(method: string, path: string, body?: any): Promise<T> {
     const token = this.getToken();
     const headers: Record<string, string> = {
@@ -34,11 +40,14 @@ class ApiClient {
     });
 
     if (res.status === 401) {
-      this.setToken(null);
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+      if (!this.isAuthPage()) {
+        this.setToken(null);
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
       }
-      throw new Error('Unauthorized');
+      const error = await res.json().catch(() => ({ message: 'Credenciais inválidas' }));
+      throw new Error(error.message || 'Credenciais inválidas');
     }
 
     if (!res.ok) {
@@ -46,6 +55,7 @@ class ApiClient {
       throw new Error(error.message || 'Erro na requisição');
     }
 
+    if (res.status === 204) return undefined as T;
     return res.json();
   }
 
