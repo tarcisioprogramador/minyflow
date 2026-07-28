@@ -6,22 +6,34 @@ import { CreateIntegrationDto, UpdateIntegrationDto } from './dto/integrations.d
 export class IntegrationsService {
   constructor(private prisma: PrismaService) {}
 
+  private parseJson(val: any): any {
+    if (typeof val === 'string') {
+      try { return JSON.parse(val); } catch { return {}; }
+    }
+    return val || {};
+  }
+
   async create(userId: string, dto: CreateIntegrationDto) {
-    return this.prisma.integration.create({
+    const integration = await this.prisma.integration.create({
       data: {
         name: dto.name,
         type: dto.type,
-        config: dto.config,
+        config: JSON.stringify(dto.config),
         userId,
       },
     });
+    return { ...integration, config: this.parseJson(integration.config) };
   }
 
   async findAll(userId: string) {
-    return this.prisma.integration.findMany({
+    const integrations = await this.prisma.integration.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
     });
+    return integrations.map((i) => ({
+      ...i,
+      config: this.parseJson(i.config),
+    }));
   }
 
   async findOne(userId: string, id: string) {
@@ -30,19 +42,18 @@ export class IntegrationsService {
     });
 
     if (!integration) throw new NotFoundException('Integração não encontrada');
-    return integration;
+    return { ...integration, config: this.parseJson(integration.config) };
   }
 
   async update(userId: string, id: string, dto: UpdateIntegrationDto) {
     await this.findOne(userId, id);
-    return this.prisma.integration.update({
+    const data: any = { ...dto };
+    if (dto.config) data.config = JSON.stringify(dto.config);
+    const integration = await this.prisma.integration.update({
       where: { id },
-      data: {
-        ...(dto.name && { name: dto.name }),
-        ...(dto.config && { config: dto.config }),
-        ...(dto.isActive !== undefined && { isActive: dto.isActive }),
-      },
+      data,
     });
+    return { ...integration, config: this.parseJson(integration.config) };
   }
 
   async remove(userId: string, id: string) {

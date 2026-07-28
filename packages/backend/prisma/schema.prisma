@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -46,7 +46,7 @@ model Contact {
   email     String?
   tags      String   @default("[]")
   segments  String   @default("[]")
-  metadata  Json?
+  metadata  String?
   userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -62,8 +62,8 @@ model Flow {
   name        String
   description String?
   status      String     @default("DRAFT")
-  nodes       Json?
-  edges       Json?
+  nodes       String?
+  edges       String?
   userId      String
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -107,7 +107,7 @@ model FlowStepExecution {
   contactId  String
   nodeId     String
   status     String
-  data       Json?
+  data       String?
   executedAt DateTime @default(now())
 
   flow    Flow    @relation(fields: [flowId], references: [id], onDelete: Cascade)
@@ -118,7 +118,7 @@ model Integration {
   id        String   @id @default(cuid())
   type      String   @default("WHATSAPP")
   name      String
-  config    Json
+  config    String
   isActive  Boolean  @default(true)
   userId    String
   createdAt DateTime @default(now())
@@ -176,7 +176,7 @@ model DripEnrollment {
 model Segment {
   id          String   @id @default(cuid())
   name        String
-  rules       Json
+  rules       String
   contactCount Int     @default(0)
   userId      String
   createdAt   DateTime @default(now())

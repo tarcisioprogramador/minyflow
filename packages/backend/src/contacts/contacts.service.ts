@@ -21,7 +21,7 @@ export class ContactsService {
         name: dto.name,
         email: dto.email,
         tags: this.serializeTags(dto.tags),
-        metadata: dto.metadata || undefined,
+        metadata: dto.metadata ? JSON.stringify(dto.metadata) : undefined,
         userId,
       },
     });
@@ -39,9 +39,9 @@ export class ContactsService {
 
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search } },
         { phone: { contains: search } },
-        { email: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search } },
       ];
     }
 
@@ -87,7 +87,7 @@ export class ContactsService {
     await this.findOne(userId, contactId);
     const data: any = { ...dto };
     if (dto.tags) data.tags = this.serializeTags(dto.tags);
-    if (dto.metadata) data.metadata = dto.metadata;
+    if (dto.metadata) data.metadata = JSON.stringify(dto.metadata);
     const contact = await this.prisma.contact.update({
       where: { id: contactId },
       data,
@@ -121,7 +121,7 @@ export class ContactsService {
             name: contact.name,
             email: contact.email,
             tags: this.serializeTags(contact.tags),
-            metadata: contact.metadata || undefined,
+            metadata: contact.metadata ? JSON.stringify(contact.metadata) : undefined,
             userId,
           },
         });

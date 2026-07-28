@@ -40,7 +40,7 @@ export class SegmentsService {
     return this.prisma.segment.create({
       data: {
         name: dto.name,
-        rules: dto.rules as any,
+        rules: JSON.stringify(dto.rules),
         contactCount,
         userId,
       },
@@ -64,14 +64,14 @@ export class SegmentsService {
 
   async update(id: string, userId: string, dto: UpdateSegmentDto) {
     const segment = await this.findOne(id, userId);
-    const rules: SegmentRuleDto[] = (dto.rules as any) || (segment.rules as any) || [];
+    const rules: SegmentRuleDto[] = dto.rules || JSON.parse(segment.rules || '[]');
     const contactCount = await this.evaluateRules(userId, rules);
 
     return this.prisma.segment.update({
       where: { id },
       data: {
         ...(dto.name && { name: dto.name }),
-        ...(dto.rules && { rules: dto.rules as any }),
+        ...(dto.rules && { rules: JSON.stringify(dto.rules) }),
         contactCount,
       },
     });
@@ -79,7 +79,7 @@ export class SegmentsService {
 
   async refresh(id: string, userId: string) {
     const segment = await this.findOne(id, userId);
-    const rules: SegmentRuleDto[] = (segment.rules as any) || [];
+    const rules: SegmentRuleDto[] = JSON.parse(segment.rules || '[]');
     const contactCount = await this.evaluateRules(userId, rules);
 
     return this.prisma.segment.update({
@@ -90,7 +90,7 @@ export class SegmentsService {
 
   async getContacts(id: string, userId: string) {
     const segment = await this.findOne(id, userId);
-    const rules: SegmentRuleDto[] = (segment.rules as any) || [];
+    const rules: SegmentRuleDto[] = JSON.parse(segment.rules || '[]');
     const contacts = await this.prisma.contact.findMany({ where: { userId } });
 
     return contacts.filter((contact) => {
