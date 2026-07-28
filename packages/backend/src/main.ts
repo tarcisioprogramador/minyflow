@@ -2,9 +2,32 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { PrismaService } from './prisma/prisma.service';
+import * as bcrypt from 'bcryptjs';
+
+async function seedAdmin(prisma: PrismaService) {
+  const email = 'admin@minyflow.com';
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (!existing) {
+    const hashed = await bcrypt.hash('admin123', 12);
+    await prisma.user.create({
+      data: {
+        email,
+        name: 'Admin',
+        password: hashed,
+        plan: 'PREMIUM',
+        messageLimit: 100000,
+      },
+    });
+    console.log('Admin user created: admin@minyflow.com / admin123');
+  }
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  const prisma = app.get(PrismaService);
+  await seedAdmin(prisma);
 
   app.setGlobalPrefix('api');
   app.enableCors({
