@@ -1,6 +1,0 @@
-{
-  "buildCommand": "cd ../.. && npm install --workspace=packages/frontend && cd packages/frontend && npm run build",
-  "outputDirectory": ".next",
-  "framework": "nextjs",
-  "installCommand": "npm install --workspace=packages/frontend"
-}
