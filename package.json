@@ -7,11 +7,15 @@
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "npm run dev --workspace=packages/backend",
     "dev:frontend": "npm run dev --workspace=packages/frontend",
-    "build": "npm run build --workspace=packages/backend && npm run build --workspace=packages/frontend",
+    "build": "cd packages/frontend && npm install && npm run build",
+    "start": "cd packages/frontend && npm start",
     "db:generate": "npm run db:generate --workspace=packages/backend",
     "db:migrate": "npm run db:migrate --workspace=packages/backend",
     "db:seed": "npm run db:seed --workspace=packages/backend",
     "lint": "concurrently \"npm run lint --workspace=packages/backend\" \"npm run lint --workspace=packages/frontend\""
+  },
+  "dependencies": {
+    "next": "14.1.0"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
