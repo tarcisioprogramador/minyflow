@@ -5,7 +5,9 @@ import { api } from '@/lib/api';
 import { useAppStore } from '@/lib/store';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
-import { User, Shield } from 'lucide-react';
+import { showToast } from '@/components/Toast';
+import { User, Shield, CreditCard } from 'lucide-react';
+import Link from 'next/link';
 
 export default function SettingsPage() {
   const user = useAppStore((s) => s.user);
@@ -29,7 +31,9 @@ export default function SettingsPage() {
       setUser({ ...user!, ...updated });
       setMessage('Perfil atualizado com sucesso');
       setTimeout(() => setMessage(''), 3000);
-    } catch {}
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao atualizar perfil');
+    }
   };
 
   const updatePassword = async () => {
@@ -40,7 +44,15 @@ export default function SettingsPage() {
       setCurrentPassword('');
       setNewPassword('');
       setTimeout(() => setMessage(''), 3000);
-    } catch {}
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao alterar senha');
+    }
+  };
+
+  const planNames: Record<string, string> = {
+    BASIC: 'Basico',
+    PRO: 'Pro',
+    PREMIUM: 'Premium',
   };
 
   return (
@@ -114,17 +126,24 @@ export default function SettingsPage() {
           </div>
 
           <div className="bg-dark-700 rounded-xl p-6 border border-dark-500">
-            <h2 className="text-lg font-semibold text-white mb-4">Plano Atual</h2>
+            <div className="flex items-center gap-2 mb-4">
+              <CreditCard size={20} className="text-primary-400" />
+              <h2 className="text-lg font-semibold text-white">Plano Atual</h2>
+            </div>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-dark-200">Plano: <span className="text-primary-400 font-medium capitalize">{user?.plan || 'Basico'}</span></p>
+                <p className="text-dark-200">Plano: <span className="text-primary-400 font-medium">{planNames[user?.plan || 'BASIC'] || user?.plan}</span></p>
                 <p className="text-dark-300 text-sm mt-1">
                   {user?.messagesUsed || 0} / {user?.messageLimit || 1000} mensagens usadas
                 </p>
               </div>
-              <button className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm">
-                Upgrade
-              </button>
+              <Link
+                href="/"
+                className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2"
+              >
+                <CreditCard size={14} />
+                Ver Planos
+              </Link>
             </div>
           </div>
         </div>

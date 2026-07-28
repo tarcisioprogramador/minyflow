@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import { showToast } from '@/components/Toast';
 import { Send } from 'lucide-react';
 
 interface Message {
@@ -36,8 +37,9 @@ export default function MessagesPage() {
     ]).then(([msgs, conts]) => {
       setMessages(msgs.data);
       setContacts(conts.data);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    }).catch((err) => {
+      showToast(err.message || 'Erro ao carregar mensagens');
+    }).finally(() => setLoading(false));
   }, []);
 
   const handleSend = async (e: React.FormEvent) => {
@@ -48,7 +50,10 @@ export default function MessagesPage() {
       const msg = await api.post<Message>('/messages', { contactId, content });
       setMessages((prev) => [msg, ...prev]);
       setContent('');
-    } catch {}
+      showToast('Mensagem enviada', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao enviar mensagem');
+    }
     setSending(false);
   };
 

@@ -15,6 +15,9 @@ import {
   LogOut,
   X,
   Puzzle,
+  Radio,
+  Layers,
+  Filter,
 } from 'lucide-react';
 
 const navItems = [
@@ -22,9 +25,12 @@ const navItems = [
   { href: '/flows', label: 'Fluxos', icon: GitBranch },
   { href: '/contacts', label: 'Contatos', icon: Users },
   { href: '/messages', label: 'Mensagens', icon: MessageSquare },
-  { href: '/automations', label: 'Automações', icon: Zap },
-  { href: '/integrations', label: 'Integrações', icon: Puzzle },
-  { href: '/settings', label: 'Configurações', icon: Settings },
+  { href: '/automations', label: 'Automacoes', icon: Zap },
+  { href: '/broadcasts', label: 'Broadcasts', icon: Radio },
+  { href: '/sequences', label: 'Sequencias', icon: Layers },
+  { href: '/segments', label: 'Segmentos', icon: Filter },
+  { href: '/integrations', label: 'Integracoes', icon: Puzzle },
+  { href: '/settings', label: 'Configuracoes', icon: Settings },
 ];
 
 export default function Sidebar() {
@@ -59,7 +65,7 @@ export default function Sidebar() {
           </button>
         </div>
 
-        <nav className="p-3 space-y-1">
+        <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-140px)] scrollbar-thin">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (

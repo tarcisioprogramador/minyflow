@@ -6,39 +6,26 @@ import { CreateFlowDto, UpdateFlowDto } from './dto/flows.dto';
 export class FlowsService {
   constructor(private prisma: PrismaService) {}
 
-  private parseJson(val: any): any {
-    if (typeof val === 'string') {
-      try { return JSON.parse(val); } catch { return []; }
-    }
-    return val || [];
-  }
-
   async create(userId: string, dto: CreateFlowDto) {
-    const flow = await this.prisma.flow.create({
+    return this.prisma.flow.create({
       data: {
         name: dto.name,
         description: dto.description,
         userId,
-        nodes: '[]',
-        edges: '[]',
+        nodes: [],
+        edges: [],
       },
     });
-    return { ...flow, nodes: [], edges: [] };
   }
 
   async findAll(userId: string) {
-    const flows = await this.prisma.flow.findMany({
+    return this.prisma.flow.findMany({
       where: { userId },
       orderBy: { updatedAt: 'desc' },
       include: {
         _count: { select: { automations: true } },
       },
     });
-    return flows.map((f) => ({
-      ...f,
-      nodes: this.parseJson(f.nodes),
-      edges: this.parseJson(f.edges),
-    }));
   }
 
   async findOne(userId: string, flowId: string) {
@@ -47,19 +34,21 @@ export class FlowsService {
     });
 
     if (!flow) throw new NotFoundException('Fluxo não encontrado');
-    return { ...flow, nodes: this.parseJson(flow.nodes), edges: this.parseJson(flow.edges) };
+    return flow;
   }
 
   async update(userId: string, flowId: string, dto: UpdateFlowDto) {
     await this.findOne(userId, flowId);
-    const data: any = { ...dto };
-    if (dto.nodes) data.nodes = JSON.stringify(dto.nodes);
-    if (dto.edges) data.edges = JSON.stringify(dto.edges);
-    const flow = await this.prisma.flow.update({
+    return this.prisma.flow.update({
       where: { id: flowId },
-      data,
+      data: {
+        ...(dto.name && { name: dto.name }),
+        ...(dto.description !== undefined && { description: dto.description }),
+        ...(dto.status && { status: dto.status }),
+        ...(dto.nodes !== undefined && { nodes: dto.nodes }),
+        ...(dto.edges !== undefined && { edges: dto.edges }),
+      },
     });
-    return { ...flow, nodes: this.parseJson(flow.nodes), edges: this.parseJson(flow.edges) };
   }
 
   async remove(userId: string, flowId: string) {
@@ -71,26 +60,24 @@ export class FlowsService {
   async duplicate(userId: string, flowId: string) {
     const original = await this.findOne(userId, flowId);
 
-    const flow = await this.prisma.flow.create({
+    return this.prisma.flow.create({
       data: {
         name: `${original.name} (Cópia)`,
         description: original.description || undefined,
-        nodes: JSON.stringify(original.nodes || []),
-        edges: JSON.stringify(original.edges || []),
+        nodes: original.nodes || [],
+        edges: original.edges || [],
         userId,
       },
     });
-    return { ...flow, nodes: this.parseJson(flow.nodes), edges: this.parseJson(flow.edges) };
   }
 
   async toggleStatus(userId: string, flowId: string) {
     const flow = await this.findOne(userId, flowId);
     const newStatus = flow.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
 
-    const updated = await this.prisma.flow.update({
+    return this.prisma.flow.update({
       where: { id: flowId },
       data: { status: newStatus },
     });
-    return { ...updated, nodes: this.parseJson(updated.nodes), edges: this.parseJson(updated.edges) };
   }
 }

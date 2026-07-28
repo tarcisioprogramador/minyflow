@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import { showToast } from '@/components/Toast';
 import { Plus, Zap, Power, Trash2, X } from 'lucide-react';
 
 interface Automation {
@@ -35,7 +36,9 @@ export default function AutomationsPage() {
       ]);
       setAutomations(autos);
       setFlows(fls);
-    } catch {}
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao carregar automações');
+    }
     setLoading(false);
   };
 
@@ -49,21 +52,33 @@ export default function AutomationsPage() {
         flowId: form.flowId,
         trigger: { type: 'KEYWORD', keyword: form.keyword, matchType: 'contains' },
       });
+      showToast('Automação criada', 'success');
       setShowForm(false);
       setForm({ name: '', flowId: '', keyword: '' });
       load();
-    } catch {}
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao criar automação');
+    }
   };
 
   const toggle = async (id: string) => {
-    await api.patch(`/automations/${id}/toggle`);
-    load();
+    try {
+      await api.patch(`/automations/${id}/toggle`);
+      load();
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao alterar status');
+    }
   };
 
   const remove = async (id: string) => {
     if (!confirm('Excluir esta automação?')) return;
-    await api.delete(`/automations/${id}`);
-    load();
+    try {
+      await api.delete(`/automations/${id}`);
+      showToast('Automação excluída', 'success');
+      load();
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao excluir automação');
+    }
   };
 
   return (

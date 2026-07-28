@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -24,6 +24,9 @@ model User {
   sessions      Session[]
   integrations  Integration[]
   messages      Message[]
+  broadcasts    Broadcast[]
+  dripSequences DripSequence[]
+  segments      Segment[]
 }
 
 model Session {
@@ -42,7 +45,8 @@ model Contact {
   name      String?
   email     String?
   tags      String   @default("[]")
-  metadata  String?
+  segments  String   @default("[]")
+  metadata  Json?
   userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -50,6 +54,7 @@ model Contact {
   user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages  Message[]
   steps     FlowStepExecution[]
+  dripEnrollments DripEnrollment[]
 }
 
 model Flow {
@@ -57,8 +62,8 @@ model Flow {
   name        String
   description String?
   status      String     @default("DRAFT")
-  nodes       String?
-  edges       String?
+  nodes       Json?
+  edges       Json?
   userId      String
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -102,7 +107,7 @@ model FlowStepExecution {
   contactId  String
   nodeId     String
   status     String
-  data       String?
+  data       Json?
   executedAt DateTime @default(now())
 
   flow    Flow    @relation(fields: [flowId], references: [id], onDelete: Cascade)
@@ -113,11 +118,69 @@ model Integration {
   id        String   @id @default(cuid())
   type      String   @default("WHATSAPP")
   name      String
-  config    String
+  config    Json
   isActive  Boolean  @default(true)
   userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Broadcast {
+  id         String    @id @default(cuid())
+  name       String
+  content    String
+  channel    String    @default("WHATSAPP")
+  status     String    @default("DRAFT")
+  targetTags String    @default("[]")
+  sentCount  Int       @default(0)
+  failCount  Int       @default(0)
+  scheduledAt DateTime?
+  sentAt     DateTime?
+  userId     String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DripSequence {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  steps       String   @default("[]")
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enrollments DripEnrollment[]
+}
+
+model DripEnrollment {
+  id          String   @id @default(cuid())
+  dripId      String
+  contactId   String
+  status      String   @default("ACTIVE")
+  currentStep Int      @default(0)
+  nextRunAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  drip    DripSequence @relation(fields: [dripId], references: [id], onDelete: Cascade)
+  contact Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+}
+
+model Segment {
+  id          String   @id @default(cuid())
+  name        String
+  rules       Json
+  contactCount Int     @default(0)
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

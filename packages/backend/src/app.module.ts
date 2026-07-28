@@ -9,6 +9,9 @@ import { MessagesModule } from './messages/messages.module';
 import { AutomationsModule } from './automations/automations.module';
 import { IntegrationsModule } from './integrations/integrations.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { BroadcastsModule } from './broadcasts/broadcasts.module';
+import { DripSequencesModule } from './drip-sequences/drip-sequences.module';
+import { SegmentsModule } from './segments/segments.module';
 import { WebhookController } from './webhook/webhook.controller';
 
 @Module({
@@ -23,6 +26,9 @@ import { WebhookController } from './webhook/webhook.controller';
     AutomationsModule,
     IntegrationsModule,
     DashboardModule,
+    BroadcastsModule,
+    DripSequencesModule,
+    SegmentsModule,
   ],
   controllers: [WebhookController],
 })

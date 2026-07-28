@@ -83,12 +83,6 @@ export class AuthService {
         messageLimit: true,
         messagesUsed: true,
         createdAt: true,
-        _count: {
-          select: {
-            contacts: true,
-            flows: true,
-          },
-        },
       },
     });
 
@@ -96,7 +90,16 @@ export class AuthService {
       throw new NotFoundException('Usuário não encontrado');
     }
 
-    return user;
+    const contactsCount = await this.prisma.contact.count({ where: { userId } });
+    const flowsCount = await this.prisma.flow.count({ where: { userId } });
+
+    return {
+      ...user,
+      _count: {
+        contacts: contactsCount,
+        flows: flowsCount,
+      },
+    };
   }
 
   private generateToken(userId: string, email: string): string {

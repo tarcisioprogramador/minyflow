@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import { showToast } from '@/components/Toast';
 import { Plus, GitBranch, Play, Pause, Copy, Trash2 } from 'lucide-react';
 
 interface Flow {
@@ -26,7 +27,9 @@ export default function FlowsPage() {
     try {
       const data = await api.get<Flow[]>('/flows');
       setFlows(data);
-    } catch {}
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao carregar fluxos');
+    }
     setLoading(false);
   };
 
@@ -36,26 +39,43 @@ export default function FlowsPage() {
     if (!newName.trim()) return;
     try {
       await api.post('/flows', { name: newName });
+      showToast('Fluxo criado', 'success');
       setNewName('');
       setShowCreate(false);
       loadFlows();
-    } catch {}
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao criar fluxo');
+    }
   };
 
   const toggleFlow = async (id: string) => {
-    await api.patch(`/flows/${id}/toggle`);
-    loadFlows();
+    try {
+      await api.patch(`/flows/${id}/toggle`);
+      loadFlows();
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao alterar status');
+    }
   };
 
   const duplicateFlow = async (id: string) => {
-    await api.post(`/flows/${id}/duplicate`);
-    loadFlows();
+    try {
+      await api.post(`/flows/${id}/duplicate`);
+      showToast('Fluxo duplicado', 'success');
+      loadFlows();
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao duplicar fluxo');
+    }
   };
 
   const deleteFlow = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir este fluxo?')) return;
-    await api.delete(`/flows/${id}`);
-    loadFlows();
+    try {
+      await api.delete(`/flows/${id}`);
+      showToast('Fluxo excluído', 'success');
+      loadFlows();
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao excluir fluxo');
+    }
   };
 
   const statusBadge = (status: string) => {

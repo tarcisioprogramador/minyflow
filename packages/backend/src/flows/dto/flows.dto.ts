@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsObject } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsObject, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateFlowDto {
@@ -26,11 +26,11 @@ export class UpdateFlowDto {
   status?: string;
 
   @IsOptional()
-  @IsObject()
+  @IsArray()
   nodes?: any[];
 
   @IsOptional()
-  @IsObject()
+  @IsArray()
   edges?: any[];
 }
 

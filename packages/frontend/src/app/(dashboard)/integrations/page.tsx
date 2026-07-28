@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import { showToast } from '@/components/Toast';
 import { Plus, Puzzle, Trash2, X, MessageSquare } from 'lucide-react';
 
 interface Integration {
@@ -24,7 +25,9 @@ export default function IntegrationsPage() {
     try {
       const data = await api.get<Integration[]>('/integrations');
       setIntegrations(data);
-    } catch {}
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao carregar integrações');
+    }
     setLoading(false);
   };
 
@@ -41,16 +44,24 @@ export default function IntegrationsPage() {
           accessToken: form.accessToken,
         },
       });
+      showToast('Integração criada', 'success');
       setShowForm(false);
       setForm({ name: '', type: 'WHATSAPP', phoneNumberId: '', accessToken: '' });
       load();
-    } catch {}
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao criar integração');
+    }
   };
 
   const remove = async (id: string) => {
     if (!confirm('Excluir esta integração?')) return;
-    await api.delete(`/integrations/${id}`);
-    load();
+    try {
+      await api.delete(`/integrations/${id}`);
+      showToast('Integração excluída', 'success');
+      load();
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao excluir integração');
+    }
   };
 
   const typeIcon: Record<string, string> = {

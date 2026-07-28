@@ -142,7 +142,10 @@ function FlowEditor() {
         nodes: nodes.map((n) => ({ ...n })),
         edges: edges.map((e) => ({ ...e })),
       });
-    } catch {}
+      alert('Fluxo salvo com sucesso!');
+    } catch (e: any) {
+      alert(e?.message || 'Erro ao salvar fluxo');
+    }
     setSaving(false);
   };
 

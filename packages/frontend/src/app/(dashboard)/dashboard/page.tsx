@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import { showToast } from '@/components/Toast';
 import { Users, GitBranch, MessageSquare, Zap, TrendingUp } from 'lucide-react';
 
 interface Stats {
@@ -15,15 +16,26 @@ interface Stats {
   messageUsage: { used: number; limit: number; percentage: number };
 }
 
+interface ChartPoint {
+  date: string;
+  count: number;
+}
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [chart, setChart] = useState<ChartPoint[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get<{ stats: Stats }>('/dashboard/stats').then((res) => {
-      setStats(res.stats);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    Promise.all([
+      api.get<{ stats: Stats }>('/dashboard/stats'),
+      api.get<ChartPoint[]>('/dashboard/chart?days=7'),
+    ]).then(([statsRes, chartRes]) => {
+      setStats(statsRes.stats);
+      setChart(chartRes);
+    }).catch((err) => {
+      showToast(err.message || 'Erro ao carregar dashboard');
+    }).finally(() => setLoading(false));
   }, []);
 
   const cards = stats ? [
@@ -32,6 +44,8 @@ export default function DashboardPage() {
     { label: 'Mensagens', value: stats.totalMessages, icon: MessageSquare, color: 'bg-purple-500/20 text-purple-400' },
     { label: 'Automações', value: stats.activeAutomations, icon: Zap, color: 'bg-yellow-500/20 text-yellow-400' },
   ] : [];
+
+  const maxChart = chart.length > 0 ? Math.max(...chart.map((c) => c.count), 1) : 1;
 
   return (
     <div className="flex min-h-screen">
@@ -61,6 +75,26 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
+
+              {chart.length > 0 && (
+                <div className="bg-dark-700 rounded-xl p-6 border border-dark-500 mb-6">
+                  <h2 className="text-lg font-semibold text-white mb-4">Mensagens (últimos 7 dias)</h2>
+                  <div className="flex items-end gap-2 h-40">
+                    {chart.map((point, i) => (
+                      <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                        <span className="text-xs text-dark-200">{point.count}</span>
+                        <div
+                          className="w-full bg-primary-600 rounded-t-md transition-all min-h-[2px]"
+                          style={{ height: `${(point.count / maxChart) * 100}%` }}
+                        />
+                        <span className="text-[10px] text-dark-300">
+                          {new Date(point.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {stats && (
                 <div className="bg-dark-700 rounded-xl p-6 border border-dark-500">

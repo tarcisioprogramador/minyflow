@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import { showToast } from '@/components/Toast';
 import { Plus, Search, Trash2, Edit, X } from 'lucide-react';
 
 interface Contact {
@@ -31,7 +32,9 @@ export default function ContactsPage() {
       const res = await api.get<{ data: Contact[]; pagination: any }>(`/contacts?${params}`);
       setContacts(res.data);
       setPagination(res.pagination);
-    } catch {}
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao carregar contatos');
+    }
     setLoading(false);
   };
 
@@ -49,14 +52,18 @@ export default function ContactsPage() {
     try {
       if (editingContact) {
         await api.patch(`/contacts/${editingContact.id}`, data);
+        showToast('Contato atualizado', 'success');
       } else {
         await api.post('/contacts', data);
+        showToast('Contato criado', 'success');
       }
       setShowForm(false);
       setEditingContact(null);
       setForm({ phone: '', name: '', email: '', tags: '' });
       loadContacts();
-    } catch {}
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao salvar contato');
+    }
   };
 
   const handleEdit = (contact: Contact) => {
@@ -72,8 +79,13 @@ export default function ContactsPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Excluir este contato?')) return;
-    await api.delete(`/contacts/${id}`);
-    loadContacts();
+    try {
+      await api.delete(`/contacts/${id}`);
+      showToast('Contato excluído', 'success');
+      loadContacts();
+    } catch (err: any) {
+      showToast(err.message || 'Erro ao excluir contato');
+    }
   };
 
   return (
